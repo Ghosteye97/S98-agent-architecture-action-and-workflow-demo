@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S98 Agent Platform — Action Governance & Workflow Orchestration</title>
+<style>
+:root{--bg:#f6f8fb;--panel:#fff;--border:#d9dee6;--text:#17212b;--muted:#667381;--blue:#2b6cb0;--bluebg:#eef5ff;--green:#2f7d43;--greenbg:#edf8f0;--amber:#946200;--amberbg:#fff6df;--red:#a33b3b;--redbg:#fff0f0;--purple:#6950a1;--purplebg:#f4f0ff}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:18px}
+h1{font-size:28px;margin:0 0 5px}.sub{color:var(--muted);font-size:14px;line-height:1.5}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{border:1px solid var(--border);background:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;color:var(--text)}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.tabs{display:flex;gap:8px;margin:16px 0}.tab.active{background:#17212b;color:#fff;border-color:#17212b}
+.banner{background:var(--bluebg);border:1px solid #bfd3ed;border-radius:14px;padding:17px;margin-bottom:15px;line-height:1.6}
+.banner strong{font-size:16px}.banner p{margin:7px 0 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+.panel h2{font-size:16px;margin:0 0 12px}.panel h3{font-size:14px;margin:0 0 8px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--bluebg);color:var(--blue)}
+.badge.green{background:var(--greenbg);color:var(--green)}.badge.amber{background:var(--amberbg);color:var(--amber)}
+.badge.purple{background:var(--purplebg);color:var(--purple)}
+.node{border:1px solid var(--border);border-radius:11px;padding:13px;margin:8px 0;background:#fbfcfe}
+.node.active{border-color:#78a8dc;background:var(--bluebg)}.node.done{border-color:#91c09d;background:var(--greenbg)}
+.node.wait{border-color:#d5b266;background:var(--amberbg)}.node.fail{border-color:#d99a9a;background:var(--redbg)}
+.node.paused{border-color:#b5a5d9;background:var(--purplebg)}
+.arrow{text-align:center;color:#7a8794;font-size:18px;padding:2px}
+.timeline{display:flex;gap:8px;overflow:auto;padding-bottom:4px;margin-bottom:14px}
+.step{min-width:145px;border:1px solid var(--border);border-radius:11px;padding:10px;background:#fff}
+.step .n{font-size:10px;color:var(--muted)}.step .t{font-size:12px;font-weight:700;margin-top:4px}
+.step.active{border-color:#78a8dc;background:var(--bluebg)}.step.done{border-color:#91c09d;background:var(--greenbg)}
+.step.wait{border-color:#d5b266;background:var(--amberbg)}.step.fail{border-color:#d99a9a;background:var(--redbg)}
+.kv{display:grid;grid-template-columns:145px 1fr;gap:6px;font-size:13px}.kv b{color:#596775}
+pre{background:#101820;color:#dce5ee;border-radius:11px;padding:13px;min-height:210px;overflow:auto;font-size:12px;line-height:1.55}
+.logline{margin:2px 0}.blue{color:#8dbaff}.green{color:#8fd19e}.yellow{color:#f2c46d}.purple{color:#c9b8f2}.dim{color:#93a0ad}
+.bigstate{text-align:center;border-radius:14px;padding:20px;background:#f7f9fb;border:1px solid var(--border)}
+.bigstate .state{font-size:24px;font-weight:800}.bigstate .detail{color:var(--muted);margin-top:5px}
+.eventbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px;border:1px dashed #b9c2cc;border-radius:11px;background:#fbfcfd;margin-top:10px}
+input,select{border:1px solid var(--border);border-radius:9px;padding:9px;background:#fff}
+.callout{border-left:4px solid var(--blue);padding:10px 13px;background:#f8fbff;margin-top:10px;font-size:13px;line-height:1.5}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.compare>div{border:1px solid var(--border);border-radius:11px;padding:13px}.compare h3{margin:0 0 7px}
+.hidden{display:none!important}
+footer{margin-top:15px;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:800px){.grid,.compare{grid-template-columns:1fr}header{display:block}.controls{margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>S98 Agent Platform: Reasoning + Controlled Execution</h1>
+    <div class="sub">Two related concepts are demonstrated separately: <b>governance of one consequential action</b> and <b>orchestration of a multi-step, asynchronous workflow</b>.</div>
+  </div>
+  <div class="controls">
+    <button class="tab active" id="tabAction">Single Action</button>
+    <button class="tab" id="tabWorkflow">Multi-Step Workflow</button>
+  </div>
+</header>
+
+<div class="banner">
+  <strong>This is not a return to rigid V1 workflows.</strong>
+  <p>The agent still reasons, plans, communicates and adapts. The platform adds control around consequential execution and, where a process spans multiple steps or external events, maintains durable workflow state so the process can pause and resume without relying on the model to remember where it was.</p>
+</div>
+
+<!-- SINGLE ACTION -->
+<section id="actionView">
+  <div class="panel" style="margin-bottom:14px">
+    <h2>Single Action Governance <span class="badge">Atomic action</span></h2>
+    <p style="font-size:13px;line-height:1.55;margin:0">
+      This view answers: <b>“How does the platform safely allow one agent action to happen?”</b>
+      It is not intended to represent a complete business workflow.
+    </p>
+  </div>
+
+  <div class="controls" style="margin-bottom:12px">
+    <select id="actionScenario">
+      <option value="success">Successful execution</option>
+      <option value="permission">403 — permission denied</option>
+      <option value="conflict">409 — state changed before execution</option>
+    </select>
+    <button class="primary" id="runAction">Run single-action simulation</button>
+    <button id="resetAction">Reset</button>
+  </div>
+
+  <div class="timeline" id="actionTimeline"></div>
+  <div class="grid">
+    <section class="panel">
+      <h2>Agent <span class="badge">Reasoning</span></h2>
+      <div id="actionAgent" class="node active">
+        <div class="kv">
+          <b>User request</b><span>“Update the GC task to In Progress.”</span>
+          <b>Agent proposal</b><span>update_task(task_id=18476, status=in_progress)</span>
+          <b>Agent role</b><span>Interpret the request and select the capability.</span>
+        </div>
+      </div>
+      <div class="callout"><b>Key point:</b> The agent proposes the action. It does not get to declare that the production change succeeded.</div>
+    </section>
+    <section class="panel">
+      <h2>Execution Gate <span class="badge">Platform-owned</span></h2>
+      <div id="actionGate"><div class="node">Waiting for the agent proposal...</div></div>
+    </section>
+    <section class="panel">
+      <h2>Tool + System of Record <span class="badge green">Existing skills remain</span></h2>
+      <div id="actionExecution"><div class="node">No external action attempted.</div></div>
+    </section>
+    <section class="panel">
+      <h2>Audit + Verified Result</h2>
+      <pre id="actionAudit"></pre>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:14px">
+    <div id="actionResult" class="bigstate"><div class="state">READY</div><div class="detail">Run the simulation to see the execution boundary.</div></div>
+  </section>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflowView" class="hidden">
+  <div class="panel" style="margin-bottom:14px">
+    <h2>Multi-Step Workflow Orchestration <span class="badge purple">Durable process state</span></h2>
+    <p style="font-size:13px;line-height:1.55;margin:0">
+      This view answers: <b>“What happens when the process takes minutes or hours, depends on a customer response, and must resume later?”</b>
+      This is the part a single-action gate cannot demonstrate by itself.
+    </p>
+  </div>
+
+  <div class="controls" style="margin-bottom:12px">
+    <button class="primary" id="startWorkflow">Start new lead workflow</button>
+    <button id="replyWorkflow" disabled>Simulate inbound customer SMS</button>
+    <button id="timeoutWorkflow" disabled>Simulate expiry / no reply</button>
+    <button id="resetWorkflow">Reset workflow</button>
+  </div>
+
+  <div class="timeline" id="workflowTimeline"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Agent Reasoning <span class="badge">Flexible</span></h2>
+      <div id="wfAgent" class="node">
+        <b>Waiting</b>
+        <div class="small" style="color:var(--muted);margin-top:5px">The agent can interpret the lead, compose messages, reason about replies and request capabilities.</div>
+      </div>
+      <div class="callout">
+        The agent is not expected to stay “awake” for the entire process. The platform persists the workflow state and resumes it when the relevant event arrives.
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Workflow State <span class="badge purple">Platform-owned</span></h2>
+      <div id="wfState" class="bigstate">
+        <div class="state">NOT STARTED</div>
+        <div class="detail">No workflow instance exists.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Current Step</h2>
+      <div id="wfStep"><div class="node">Start the workflow to begin.</div></div>
+      <div class="eventbar" id="eventBar">
+        <b>External event:</b> <span id="eventText">None</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Execution / Verification</h2>
+      <div id="wfExecution"><div class="node">No action attempted.</div></div>
+    </section>
+
+    <section class="panel" style="grid-column:1/-1">
+      <h2>Workflow Event Log</h2>
+      <pre id="wfAudit"></pre>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:14px">
+    <h2>What this demonstrates</h2>
+    <div class="compare">
+      <div>
+        <h3>Single-action gate</h3>
+        <div style="font-size:13px;line-height:1.55">
+          Controls one consequential action: validate → execute → verify → audit.
+          It protects the action, but it does not own a multi-hour business process.
+        </div>
+      </div>
+      <div>
+        <h3>Workflow orchestration</h3>
+        <div style="font-size:13px;line-height:1.55">
+          Owns the process instance: state → step → external event → resume → next step.
+          The agent can disappear between events without losing ownership of the process.
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<footer>
+  Demonstration only. The API calls are simulated. The architecture shown separates agent reasoning from platform-controlled execution and durable process state; it does not prescribe a specific vendor, framework, database or implementation language.
+</footer>
+</div>
+
+<script>
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function buildTimeline(id,steps){
+  const el=document.getElementById(id); el.innerHTML="";
+  steps.forEach((s,i)=>{let d=document.createElement("div");d.className="step";d.id=id+"_"+i;d.innerHTML='<div class="n">'+(i+1)+'</div><div class="t">'+s+'</div>';el.appendChild(d)});
+}
+function markTimeline(prefix,i,state){
+  const e=document.getElementById(prefix+"_"+i); if(!e)return;
+  e.className="step "+(state||"");
+}
+function logTo(el,text,cls=""){el.innerHTML+='<div class="logline '+cls+'">'+text+'</div>';el.scrollTop=el.scrollHeight}
+function setNode(el,title,body,cls="node"){el.innerHTML='<div class="'+cls+'"><b>'+title+'</b><div style="margin-top:6px">'+body+'</div></div>'}
+
+buildTimeline("actionTimeline",["User request","Agent reasoning","Capability check","State / target validation","Execution gate","GC API","Verify result","Audit + return"]);
+buildTimeline("workflowTimeline",["Lead received","First outreach","WAITING_FOR_REPLY","Inbound SMS","Availability / reasoning","Customer selects slot","Booking","Verify + CRM"]);
+
+const tabs={action:document.getElementById("actionView"),workflow:document.getElementById("workflowView")};
+document.getElementById("tabAction").onclick=()=>{tabs.action.classList.remove("hidden");tabs.workflow.classList.add("hidden");document.getElementById("tabAction").classList.add("active");document.getElementById("tabWorkflow").classList.remove("active")};
+document.getElementById("tabWorkflow").onclick=()=>{tabs.workflow.classList.remove("hidden");tabs.action.classList.add("hidden");document.getElementById("tabWorkflow").classList.add("active");document.getElementById("tabAction").classList.remove("active")};
+
+// Action simulation
+const actionGate=document.getElementById("actionGate"), actionExec=document.getElementById("actionExecution"), actionAudit=document.getElementById("actionAudit"), actionResult=document.getElementById("actionResult"), actionAgent=document.getElementById("actionAgent");
+function resetAction(){
+  actionGate.innerHTML='<div class="node">Waiting for the agent proposal...</div>';
+  actionExec.innerHTML='<div class="node">No external action attempted.</div>';
+  actionAudit.textContent="";
+  actionResult.innerHTML='<div class="state">READY</div><div class="detail">Run the simulation to see the execution boundary.</div>';
+  actionAgent.className="node active";
+  for(let i=0;i<8;i++)markTimeline("actionTimeline",i,"");
+}
+async function runAction(){
+  resetAction(); const sc=document.getElementById("actionScenario").value;
+  markTimeline("actionTimeline",0,"done");logTo(actionAudit,"[REQUEST] User asks to update GC task 18476","blue");await sleep(300);
+  markTimeline("actionTimeline",1,"active");logTo(actionAudit,"[AGENT] Interprets request and proposes gc.tasks.update","blue");await sleep(400);markTimeline("actionTimeline",1,"done");
+  markTimeline("actionTimeline",2,"active");setNode(actionGate,"Capability allowed","gc.tasks.update is available to this agent/session.");logTo(actionAudit,"[CONTROL] Capability allowed ✓","green");await sleep(350);markTimeline("actionTimeline",2,"done");
+  markTimeline("actionTimeline",3,"active");setNode(actionGate,"State + target validation","Session binding ✓<br>Target binding ✓<br>Requested transition is valid.");logTo(actionAudit,"[CONTROL] Session + target + transition validated ✓","green");await sleep(400);markTimeline("actionTimeline",3,"done");
+  markTimeline("actionTimeline",4,"active");setNode(actionExec,"Execution gateway","Idempotency key created.<br>Request prepared for GC.");logTo(actionAudit,"[GATE] idempotency_key=req_demo_8f31","dim");await sleep(350);markTimeline("actionTimeline",4,"done");
+  markTimeline("actionTimeline",5,"active");
+  if(sc==="permission"){
+    setNode(actionExec,"GC response","403 Forbidden. Permission denied.","node fail");logTo(actionAudit,"[GC] 403 Forbidden","yellow");markTimeline("actionTimeline",5,"fail");markTimeline("actionTimeline",6,"fail");markTimeline("actionTimeline",7,"done");
+    actionResult.innerHTML='<div class="state">FAILED SAFELY</div><div class="detail">The agent receives a verified failure. No false success and no dependent action.</div>';actionAgent.className="node";logTo(actionAudit,"[RETURN] action_status=failed | reason=permission_denied","yellow");return;
+  }
+  if(sc==="conflict"){
+    setNode(actionExec,"GC response","409 Conflict. The task changed after validation. The platform refuses to overwrite the newer state.","node fail");logTo(actionAudit,"[GC] 409 Conflict — state changed","yellow");markTimeline("actionTimeline",5,"fail");markTimeline("actionTimeline",6,"fail");markTimeline("actionTimeline",7,"done");
+    actionResult.innerHTML='<div class="state">PAUSED FOR REASSESSMENT</div><div class="detail">Verified current state is returned to the agent instead of blindly retrying.</div>';actionAgent.className="node";logTo(actionAudit,"[RETURN] action_status=conflict | follow_up=agent_reassessment","purple");return;
+  }
+  setNode(actionExec,"GC response","200 OK. Task changed to <b>In Progress</b>.","node done");logTo(actionAudit,"[GC] 200 OK — update accepted","green");await sleep(350);markTimeline("actionTimeline",5,"done");
+  markTimeline("actionTimeline",6,"active");setNode(actionExec,"Verification","Re-read system of record.<br><b>Verified: In Progress</b>","node done");logTo(actionAudit,"[VERIFY] System of record confirms status=in_progress ✓","green");await sleep(350);markTimeline("actionTimeline",6,"done");
+  markTimeline("actionTimeline",7,"active");logTo(actionAudit,"[AUDIT] Proposal + checks + API result + verified outcome recorded","green");await sleep(250);markTimeline("actionTimeline",7,"done");
+  actionResult.innerHTML='<div class="state">VERIFIED SUCCESS</div><div class="detail">GC confirms task 18476 is In Progress. The verified result is returned to the agent.</div>';actionAgent.className="node done";logTo(actionAudit,"[RETURN] verified_state={task_id:18476,status:in_progress}","blue");
+}
+document.getElementById("runAction").onclick=runAction;document.getElementById("resetAction").onclick=resetAction;resetAction();
+
+// Workflow simulation
+let wf={state:"NOT_STARTED",replied:false,slotSelected:false,started:false};
+const wfState=document.getElementById("wfState"),wfStep=document.getElementById("wfStep"),wfAgent=document.getElementById("wfAgent"),wfExecution=document.getElementById("wfExecution"),wfAudit=document.getElementById("wfAudit"),eventText=document.getElementById("eventText");
+const replyBtn=document.getElementById("replyWorkflow"),timeoutBtn=document.getElementById("timeoutWorkflow");
+function setWFState(state,detail,cls=""){
+  wfState.innerHTML='<div class="state">'+state+'</div><div class="detail">'+detail+'</div>';
+  wfState.className="bigstate "+cls;
+}
+function resetWF(){
+  wf={state:"NOT_STARTED",replied:false,slotSelected:false,started:false};
+  setWFState("NOT STARTED","No workflow instance exists.");
+  setNode(wfStep,"Waiting","Start the workflow to begin.");
+  setNode(wfExecution,"No execution","No action attempted.");
+  setNode(wfAgent,"Waiting","The agent has not received a lead yet.");
+  wfAudit.textContent="";eventText.textContent="None";
+  replyBtn.disabled=true;timeoutBtn.disabled=true;
+  for(let i=0;i<8;i++)markTimeline("workflowTimeline",i,"");
+}
+async function startWF(){
+  resetWF();wf.started=true;
+  markTimeline("workflowTimeline",0,"active");logTo(wfAudit,"[WORKFLOW] Instance created: WF-2026-0812-0042","blue");setWFState("LEAD_RECEIVED","Workflow state persisted outside the agent.");await sleep(450);markTimeline("workflowTimeline",0,"done");
+  markTimeline("workflowTimeline",1,"active");setNode(wfAgent,"Agent reasoning","Interprets the new lead and composes first outreach.");setNode(wfStep,"Send first outreach","Agent requests the SMS capability. Platform validates and executes the outbound message.");setNode(wfExecution,"SMS sent","Twilio returns a successful send response. Outbound action is recorded.","node done");logTo(wfAudit,"[EXECUTE] Outbound SMS sent and verified","green");await sleep(500);markTimeline("workflowTimeline",1,"done");
+  markTimeline("workflowTimeline",2,"wait");wf.state="WAITING_FOR_REPLY";setWFState("WAITING_FOR_REPLY","Process is paused safely. The agent does not need to remain active.","wait");setNode(wfStep,"Waiting for customer reply","No next business step is available until an inbound SMS event arrives.");setNode(wfAgent,"Agent not required to stay active","The platform owns the workflow instance and waits for the external event.");setNode(wfExecution,"Waiting","No booking or scheduling action is allowed yet.");eventText.textContent="Waiting for inbound SMS webhook";logTo(wfAudit,"[STATE] WAITING_FOR_REPLY — persisted and resumable","yellow");replyBtn.disabled=false;timeoutBtn.disabled=false;
+}
+async function inboundReply(){
+  if(!wf.started||wf.state!=="WAITING_FOR_REPLY")return;
+  wf.replied=true;replyBtn.disabled=true;timeoutBtn.disabled=true;eventText.textContent="Inbound SMS webhook received: “Etobicoke”";
+  markTimeline("workflowTimeline",2,"done");markTimeline("workflowTimeline",3,"active");setWFState("RESUMING","Inbound event matched to workflow WF-2026-0812-0042.");setNode(wfAgent,"Agent resumed with context","The platform supplies the persisted state and the new customer message. The agent can now reason about territory and scheduling.");setNode(wfStep,"Process inbound location","Record inbound SMS → identify territory → request availability capability.");logTo(wfAudit,"[EVENT] Inbound SMS received and matched to workflow instance","blue");await sleep(500);markTimeline("workflowTimeline",3,"done");
+  markTimeline("workflowTimeline",4,"active");setWFState("AVAILABILITY","Workflow advanced only after the required event arrived.");setNode(wfStep,"Check availability","Agent requests the scheduling capability. Platform verifies the rep/territory context and controls the action.");setNode(wfExecution,"Availability verified","2–3 valid slots returned from the calendar system.","node done");logTo(wfAudit,"[VERIFY] Availability returned and verified","green");await sleep(500);markTimeline("workflowTimeline",4,"done");
+  markTimeline("workflowTimeline",5,"wait");wf.state="WAITING_FOR_SELECTION";setWFState("WAITING_FOR_SELECTION","Again, the process pauses until the customer chooses a slot.","wait");setNode(wfStep,"Waiting for slot selection","The next booking step is not available until the customer responds.");setNode(wfAgent,"Agent not required to remain active","The process instance remains owned by the orchestration layer.");setNode(wfExecution,"Waiting","No booking request is executed.");eventText.textContent="Waiting for inbound SMS: customer selects a slot";logTo(wfAudit,"[STATE] WAITING_FOR_SELECTION — persisted and resumable","yellow");
+  // For demo, enable the same button to represent the next external event.
+  replyBtn.disabled=false;replyBtn.textContent="Simulate customer selects Slot 2";replyBtn.onclick=selectSlot;
+}
+async function selectSlot(){
+  if(wf.state==="WAITING_FOR_SELECTION"){
+    replyBtn.disabled=true;eventText.textContent="Inbound SMS webhook: customer selected Slot 2";markTimeline("workflowTimeline",5,"done");markTimeline("workflowTimeline",6,"active");
+    setWFState("BOOKING","Customer event resumed the workflow.");setNode(wfStep,"Create appointment","Agent requests booking. Platform validates current state and executes the calendar action.");setNode(wfExecution,"Calendar booking","201 Created. Appointment created.","node done");logTo(wfAudit,"[EVENT] Slot selection received","blue");await sleep(500);logTo(wfAudit,"[EXECUTE] Calendar booking created: 201","green");await sleep(350);markTimeline("workflowTimeline",6,"done");
+    markTimeline("workflowTimeline",7,"active");setNode(wfExecution,"Final verification","Calendar system confirms the appointment exists.<br>CRM update is then permitted.");logTo(wfAudit,"[VERIFY] Appointment confirmed in system of record","green");await sleep(400);markTimeline("workflowTimeline",7,"done");
+    wf.state="COMPLETED";setWFState("COMPLETED","Workflow finished with verified booking.","");setNode(wfStep,"Complete","Appointment booked and required CRM state updated.");setNode(wfAgent,"Agent receives verified completion","The agent can communicate the confirmed outcome to the customer.");eventText.textContent="No outstanding event";logTo(wfAudit,"[COMPLETE] Workflow WF-2026-0812-0042 completed successfully","green");
+    replyBtn.onclick=inboundReply;replyBtn.textContent="Simulate inbound customer SMS";replyBtn.disabled=true;
+  }
+}
+async function timeoutWF(){
+  if(wf.state!=="WAITING_FOR_REPLY")return;
+  replyBtn.disabled=true;timeoutBtn.disabled=true;eventText.textContent="No inbound reply before expiry";markTimeline("workflowTimeline",2,"fail");wf.state="PAUSED_NEEDS_ATTENTION";setWFState("PAUSED / NEEDS ATTENTION","The process did not silently disappear. Its state remains visible and resumable.","paused");setNode(wfStep,"Expiry reached","No customer reply was received within the configured window. No scheduling action is executed.");setNode(wfAgent,"Agent can be invoked again later","The platform can surface the paused instance to an agent, queue or human operator.");setNode(wfExecution,"No dependent action","Booking remains blocked because the prerequisite customer response never arrived.");logTo(wfAudit,"[TIMEOUT] WAITING_FOR_REPLY expired","yellow");logTo(wfAudit,"[STATE] PAUSED_NEEDS_ATTENTION — workflow ownership retained","purple");
+}
+document.getElementById("startWorkflow").onclick=startWF;
+document.getElementById("replyWorkflow").onclick=inboundReply;
+document.getElementById("timeoutWorkflow").onclick=timeoutWF;
+document.getElementById("resetWorkflow").onclick=resetWF;
+resetWF();
+</script>
+</body>
+</html>
